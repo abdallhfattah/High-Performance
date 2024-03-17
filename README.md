@@ -23,7 +23,6 @@ The task is to write a parallel C program to count prime numbers between a given
 
 ### How to Run
 1. Compile the program using MPI:
-   ```bash mpicc counting_primes.c -o counting_primes -lm```
-
-2.Run the program using mpiexec:
-`mpiexec -n <num_processes> ./counting_primes`
+  ``` mpicc -g counting_primes.c -o counting_primes -lmpi -lmpi_cxx ```
+2. Run the program using mpiexec:
+`mpirun -n <num_processes> ./counting_primes`
