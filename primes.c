@@ -24,19 +24,21 @@ int main(int argc, char* argv[]) {
     int tag = 0;        /* tag for messages */
     MPI_Status status;  /* return status for recieve */
 
-    int range;
-    int low = 1, high = 100;
-
-    // printf("Enter first number: ");
-    // scanf("%d", &low);
-    // printf("Enter second number: ");
-    // scanf("%d", &high);
-
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &p);
 
     if (my_rank == 0) {
+        int range;
+        int low, high;
+
+        printf("Enter lower bound: ");
+        fflush(stdout);
+        scanf("%d", &low);
+        printf("Enter upper bound: ");
+        fflush(stdout);
+        scanf("%d", &high);
+
         range = (high - low + 1) / (p - 1 + (p == 1));
         for (int dest_rank = 1; dest_rank < p; dest_rank++) {
             MPI_Send(&low, 1, MPI_INT, dest_rank, tag, MPI_COMM_WORLD);
@@ -44,12 +46,11 @@ int main(int argc, char* argv[]) {
         }
     }
     else {
+        int low, range;
         MPI_Recv(&low, 1, MPI_INT, 0, tag, MPI_COMM_WORLD, &status);
         MPI_Recv(&range, 1, MPI_INT, 0, tag, MPI_COMM_WORLD, &status);
-    }
 
-    int local_primes = 0;
-    if (my_rank != 0) {
+        int local_primes = 0;
         int lower_bound = low + (my_rank - 1) * range;
         int upper_bound = range + lower_bound;
         for (int i = lower_bound; i < upper_bound; i++) {
@@ -57,7 +58,11 @@ int main(int argc, char* argv[]) {
                 local_primes++;
             }
         }
+
         MPI_Send(&local_primes, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+
+        printf("Total number of prime numbers in P%d is: %d\n", my_rank, local_primes);
+        fflush(stdout);
     }
 
     if (my_rank == 0) {
@@ -71,9 +76,7 @@ int main(int argc, char* argv[]) {
         }
 
         printf("Total number of prime numbers is: %d\n", total_count);
-    }
-    else {
-        printf("Total number of prime numbers in P%d is: %d\n", my_rank, local_primes);
+        fflush(stdout);
     }
 
     MPI_Finalize();
