@@ -31,26 +31,53 @@ int main(int argc, char * argv[])
     int currentRank;
     int numberOfProcesses;
     int flag;
-    char word[100] = "tutorial";
+    char word[100] = { 0 };
     MPI_Comm_rank(MPI_COMM_WORLD, &currentRank);
     MPI_Comm_size(MPI_COMM_WORLD, &numberOfProcesses);
     int currentProcessSize = strlen(word) / (numberOfProcesses - 1 + (numberOfProcesses == 1));
     if (currentRank == 0) {
+        int readMode = 0;
+        printf("Do you want to read from a file?\n1. Yes\n2. No\n");
+        fflush(stdout);
+        scanf("%d", &readMode);
         int choice;
         printf("What do you want to do?\n1. Encrypt\n2. Decrypt\n");
         fflush(stdout);
         scanf("%d", &choice);
         if (choice == 1) {
             flag = 1;
-            printf("Please enter the word you want to encrypt: ");
-            fflush(stdout);
         } else {
             flag = 0;
-            printf("Please enter the word you want to decrypt: ");
-            fflush(stdout);
         }
-        scanf("%s", word);
 
+        if (readMode == 1) {
+            char fileName[100];
+            printf("Please enter the file name: ");
+            fflush(stdout);
+            scanf("%s", &fileName);
+            FILE *file = fopen(fileName, "r");
+            if (file == NULL) {
+                printf("Error opening file\n");
+                fflush(stdout);
+                return 0;
+            }
+            char line[100] = { 0 };
+            while (fgets(line, 100, file) != NULL) {
+                strcat(word, line);
+                fflush(stdout);
+            }
+            fclose(file);
+        } else {
+            
+            if ( flag == 1 ) {
+                printf("Please enter the word you want to encrypt: ");
+                fflush(stdout);
+            } else {
+                printf("Please enter the word you want to decrypt: ");
+                fflush(stdout);
+            }
+            scanf("%s", word);
+        }
         for (int i = 1; i < numberOfProcesses; i++) {
             MPI_Send(&word, strlen(word), MPI_CHAR, i, 0, MPI_COMM_WORLD);
             MPI_Send(&flag, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
